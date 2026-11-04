@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Damage Reports - Lab Inventory System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">{% if user.role == 'admin' %}Damage Reports Manager{% else %}My Damage Reports{% endif %}</h3>
+            <p class="text-secondary small mb-0">{% if user.role == 'admin' %}Monitor, inspect, and update reported damage files.{% else %}File and monitor reports about faulty or broken laboratory resources.{% endif %}</p>
+        </div>
+        {% if user.role == 'student' %}
+        <div>
+            <a href="{% url 'bookings:report_create' %}" class="btn btn-primary-custom px-4">
+                <i class="fa-solid fa-plus me-1"></i> File Damage Report
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Admin Filters -->
+    {% if user.role == 'admin' %}
+    <div class="card card-custom p-4 mb-4 border-0 shadow-sm">
+        <form method="get" class="row g-3">
+            <!-- Search -->
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label fw-semibold small text-secondary">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0 text-muted">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control border-start-0" placeholder="Report ID, student, equipment..." value="{{ q }}">
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label class="form-label fw-semibold small text-secondary">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    {% for s_val, s_label in status_choices %}
+                        <option value="{{ s_val }}" {% if selected_status == s_val %}selected{% endif %}>{{ s_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Severity -->
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label class="form-label fw-semibold small text-secondary">Severity</label>
+                <select name="severity" class="form-select">
+                    <option value="">All Severities</option>
+                    {% for sev_val, sev_label in severity_choices %}
+                        <option value="{{ sev_val }}" {% if selected_severity == sev_val %}selected{% endif %}>{{ sev_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Student -->
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <label class="form-label fw-semibold small text-secondary">Student</label>
+                <select name="student" class="form-select">
+                    <option value="">All Students</option>
+                    {% for stud in student_options %}
+                        <option value="{{ stud.pk }}" {% if selected_student == stud.pk|stringformat:"i" %}selected{% endif %}>{{ stud.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Equipment -->
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <label class="form-label fw-semibold small text-secondary">Equipment</label>
+                <select name="equipment" class="form-select">
+                    <option value="">All Equipment</option>
+                    {% for eq in equipment_options %}
+                        <option value="{{ eq.pk }}" {% if selected_equip == eq.pk|stringformat:"i" %}selected{% endif %}>{{ eq.equipment_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Date -->
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <label class="form-label fw-semibold small text-secondary">Reported Date</label>
+                <input type="date" name="created_date" class="form-control" value="{{ selected_date }}">
+            </div>
+
+            <div class="col-12 d-flex justify-content-end gap-2 mt-3">
+                <a href="{% url 'bookings:report_list' %}" class="btn btn-outline-custom">Reset Filters</a>
+                <button type="submit" class="btn btn-primary-custom px-4">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Report Table -->
+    <div class="card card-custom border-0 shadow-sm overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-4 py-3" style="width: 15%;">Report ID</th>
+                        {% if user.role == 'admin' %}
+                            <th class="py-3" style="width: 20%;">Student</th>
+                        {% endif %}
+                        <th class="py-3" style="width: 20%;">Equipment</th>
+                        <th class="py-3" style="width: 20%;">Title</th>
+                        <th class="py-3" style="width: 10%;">Severity</th>
+                        <th class="py-3" style="width: 10%;">Status</th>
+                        <th class="px-4 py-3 text-end" style="width: 5%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                        <tr>
+                            <!-- Report ID -->
+                            <td class="px-4 fw-semibold font-monospace text-primary">{{ report.report_id }}</td>
+                            
+                            <!-- Student (Admin Only) -->
+                            {% if user.role == 'admin' %}
+                                <td>
+                                    <div class="fw-semibold text-dark">{{ report.student.full_name }}</div>
+                                    <small class="text-secondary small">{{ report.student.email }}</small>
+                                </td>
+                            {% endif %}
+                            
+                            <!-- Equipment -->
+                            <td>
+                                <div class="fw-semibold text-dark">{{ report.equipment.equipment_name }}</div>
+                                <small class="text-secondary small font-monospace">{{ report.equipment.equipment_code }}</small>
+                            </td>
+
+                            <!-- Title -->
+                            <td class="text-truncate fw-medium" style="max-width: 180px;">{{ report.title }}</td>
+                            
+                            <!-- Severity Badge -->
+                            <td>
+                                {% if report.severity == 'Critical' %}
+                                    <span class="badge bg-danger text-white rounded-pill px-2.5 py-1">Critical</span>
+                                {% elif report.severity == 'High' %}
+                                    <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1" style="background-color: #fd7e14 !important; color: white !important;">High</span>
+                                {% elif report.severity == 'Medium' %}
+                                    <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1">Medium</span>
+                                {% else %}
+                                    <span class="badge bg-secondary text-white rounded-pill px-2.5 py-1">Low</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Status Badge -->
+                            <td>
+                                {% if report.status == 'Resolved' %}
+                                    <span class="badge bg-success text-white rounded-pill px-2.5 py-1">Resolved</span>
+                                {% elif report.status == 'Under Review' %}
+                                    <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1" style="background-color: #fd7e14 !important; color: white !important;">Under Review</span>
+                                {% elif report.status == 'Rejected' %}
+                                    <span class="badge bg-danger text-white rounded-pill px-2.5 py-1">Rejected</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1">Pending</span>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- Actions -->
+                            <td class="px-4 text-end">
+                                <a href="{% url 'bookings:report_detail' report.pk %}" class="btn btn-sm btn-outline-custom text-primary border-0" title="View Details">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="{% if user.role == 'admin' %}7{% else %}6{% endif %}" class="text-center py-5 text-secondary">
+                                <i class="fa-solid fa-triangle-exclamation fa-3x mb-3 text-muted"></i>
+                                <p class="mb-0">No damage reports found.</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <div class="card-footer bg-white border-0 py-3">
+                <nav aria-label="Page navigation" class="d-flex justify-content-between align-items-center">
+                    <div class="text-secondary small">
+                        Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </div>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_severity %}&severity={{ selected_severity }}{% endif %}{% if selected_student %}&student={{ selected_student }}{% endif %}{% if selected_equip %}&equipment={{ selected_equip }}{% endif %}{% if selected_date %}&created_date={{ selected_date }}{% endif %}">&laquo;&laquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_severity %}&severity={{ selected_severity }}{% endif %}{% if selected_student %}&student={{ selected_student }}{% endif %}{% if selected_equip %}&equipment={{ selected_equip }}{% endif %}{% if selected_date %}&created_date={{ selected_date }}{% endif %}">&laquo;</a></li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_severity %}&severity={{ selected_severity }}{% endif %}{% if selected_student %}&student={{ selected_student }}{% endif %}{% if selected_equip %}&equipment={{ selected_equip }}{% endif %}{% if selected_date %}&created_date={{ selected_date }}{% endif %}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_severity %}&severity={{ selected_severity }}{% endif %}{% if selected_student %}&student={{ selected_student }}{% endif %}{% if selected_equip %}&equipment={{ selected_equip }}{% endif %}{% if selected_date %}&created_date={{ selected_date }}{% endif %}">&raquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_severity %}&severity={{ selected_severity }}{% endif %}{% if selected_student %}&student={{ selected_student }}{% endif %}{% if selected_equip %}&equipment={{ selected_equip }}{% endif %}{% if selected_date %}&created_date={{ selected_date }}{% endif %}">&raquo;&raquo;</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

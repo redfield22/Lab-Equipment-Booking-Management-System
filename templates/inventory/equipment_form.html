@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Edit{% else %}Add{% endif %} Equipment - Lab Inventory System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card card-custom p-4 shadow-sm border-0">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <a href="{% url 'inventory:equipment_list' %}" class="btn btn-sm btn-outline-custom">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h4 class="fw-bold mb-0">{% if object %}Modify{% else %}Register{% endif %} Equipment</h4>
+                        <p class="text-secondary small mb-0">Define specifications, stock levels, location, and images for lab items</p>
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger" style="border-radius: 8px;">
+                        {% for error in form.non_field_errors %}
+                            <p class="mb-0 small"><i class="fa-solid fa-triangle-exclamation me-1"></i> {{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    
+                    <h5 class="fw-bold mb-3 pb-2 border-bottom text-primary">Basic Specification</h5>
+                    <div class="row g-3 mb-4">
+                        <!-- Equipment Name -->
+                        <div class="col-md-6">
+                            <label for="{{ form.equipment_name.id_for_label }}" class="form-label fw-semibold small text-secondary">Equipment Name <span class="text-danger">*</span></label>
+                            {{ form.equipment_name }}
+                            {% if form.equipment_name.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.equipment_name.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Department Selection -->
+                        <div class="col-md-6">
+                            <label for="{{ form.department.id_for_label }}" class="form-label fw-semibold small text-secondary">Department <span class="text-danger">*</span></label>
+                            {{ form.department }}
+                            {% if form.department.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.department.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Equipment Code -->
+                        <div class="col-md-4">
+                            <label for="{{ form.equipment_code.id_for_label }}" class="form-label fw-semibold small text-secondary">Equipment Code</label>
+                            {{ form.equipment_code }}
+                            <div class="form-text small" style="font-size: 0.7rem;">Leave blank to auto-generate (e.g. EQ0001)</div>
+                            {% if form.equipment_code.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.equipment_code.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Manufacturer -->
+                        <div class="col-md-4">
+                            <label for="{{ form.manufacturer.id_for_label }}" class="form-label fw-semibold small text-secondary">Manufacturer</label>
+                            {{ form.manufacturer }}
+                            {% if form.manufacturer.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.manufacturer.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Model Number -->
+                        <div class="col-md-4">
+                            <label for="{{ form.model_number.id_for_label }}" class="form-label fw-semibold small text-secondary">Model Number</label>
+                            {{ form.model_number }}
+                            {% if form.model_number.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.model_number.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-3 pb-2 border-bottom text-primary">Inventory & Location</h5>
+                    <div class="row g-3 mb-4">
+                        <!-- Total Quantity -->
+                        <div class="col-md-3 col-sm-6">
+                            <label for="{{ form.total_quantity.id_for_label }}" class="form-label fw-semibold small text-secondary">Total Quantity <span class="text-danger">*</span></label>
+                            {{ form.total_quantity }}
+                            {% if form.total_quantity.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.total_quantity.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Available Quantity -->
+                        <div class="col-md-3 col-sm-6">
+                            <label for="{{ form.available_quantity.id_for_label }}" class="form-label fw-semibold small text-secondary">Available Quantity <span class="text-danger">*</span></label>
+                            {{ form.available_quantity }}
+                            {% if form.available_quantity.errors %}
+                                <div class="text-danger small mt-1">
+                                    <!-- Display both model level validation and field errors -->
+                                    {% for error in form.available_quantity.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Condition -->
+                        <div class="col-md-3 col-sm-6">
+                            <label for="{{ form.condition.id_for_label }}" class="form-label fw-semibold small text-secondary">Condition</label>
+                            {{ form.condition }}
+                            {% if form.condition.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.condition.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Status -->
+                        <div class="col-md-3 col-sm-6">
+                            <label for="{{ form.status.id_for_label }}" class="form-label fw-semibold small text-secondary">Status</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.status.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Location -->
+                        <div class="col-md-6">
+                            <label for="{{ form.location.id_for_label }}" class="form-label fw-semibold small text-secondary">Location</label>
+                            {{ form.location }}
+                            {% if form.location.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.location.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Image Upload -->
+                        <div class="col-md-6">
+                            <label for="{{ form.image.id_for_label }}" class="form-label fw-semibold small text-secondary">Product Image</label>
+                            {{ form.image }}
+                            {% if form.image.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.image.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-3 pb-2 border-bottom text-primary">Financials & Descriptions</h5>
+                    <div class="row g-3">
+                        <!-- Purchase Date -->
+                        <div class="col-md-6">
+                            <label for="{{ form.purchase_date.id_for_label }}" class="form-label fw-semibold small text-secondary">Purchase Date</label>
+                            {{ form.purchase_date }}
+                            {% if form.purchase_date.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.purchase_date.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Purchase Cost -->
+                        <div class="col-md-6">
+                            <label for="{{ form.purchase_cost.id_for_label }}" class="form-label fw-semibold small text-secondary">Purchase Cost ($)</label>
+                            {{ form.purchase_cost }}
+                            {% if form.purchase_cost.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.purchase_cost.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description -->
+                        <div class="col-md-6">
+                            <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold small text-secondary">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.description.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Remarks -->
+                        <div class="col-md-6">
+                            <label for="{{ form.remarks.id_for_label }}" class="form-label fw-semibold small text-secondary">Remarks</label>
+                            {{ form.remarks }}
+                            {% if form.remarks.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.remarks.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'inventory:equipment_list' %}" class="btn btn-outline-custom px-4 py-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary-custom px-4 py-2">
+                            <i class="fa-solid fa-floppy-disk me-2"></i> Save Equipment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

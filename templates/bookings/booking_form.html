@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Book {{ equipment.equipment_name }} - Lab Inventory System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card card-custom p-4 shadow-sm border-0">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <a href="{% url 'inventory:equipment_detail' equipment.pk %}" class="btn btn-sm btn-outline-custom">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h4 class="fw-bold mb-0">Request Equipment Booking</h4>
+                        <p class="text-secondary small mb-0">Submit a rental request for laboratory resources</p>
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger" style="border-radius: 8px;">
+                        {% for error in form.non_field_errors %}
+                            <p class="mb-0 small"><i class="fa-solid fa-triangle-exclamation me-1"></i> {{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="row g-4">
+                    <!-- Left Column: Equipment Info Summary -->
+                    <div class="col-md-5">
+                        <div class="p-3 bg-light rounded border h-100">
+                            <h6 class="fw-bold text-primary mb-3">Equipment Summary</h6>
+                            <div class="text-center mb-3">
+                                {% if equipment.image %}
+                                    <img src="{{ equipment.image.url }}" alt="{{ equipment.equipment_name }}" class="img-fluid rounded border shadow-sm" style="max-height: 180px; object-fit: contain;">
+                                {% else %}
+                                    <div class="d-inline-flex align-items-center justify-content-center bg-white border text-secondary rounded-circle" style="width: 80px; height: 80px;">
+                                        <i class="fa-solid fa-microscope fa-2x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <h5 class="fw-bold text-center mb-1">{{ equipment.equipment_name }}</h5>
+                            <p class="text-center text-secondary small font-monospace mb-3">{{ equipment.equipment_code }}</p>
+                            
+                            <hr class="my-3">
+                            
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span class="text-secondary">Department</span>
+                                <span class="fw-semibold text-dark">{{ equipment.department.name }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span class="text-secondary">Storage Location</span>
+                                <span class="fw-semibold text-dark">{{ equipment.location|default:"—" }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span class="text-secondary">Condition</span>
+                                <span class="fw-semibold text-dark">{{ equipment.condition }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-secondary">Available Stock</span>
+                                <span class="fw-bold text-success">{{ equipment.available_quantity }} / {{ equipment.total_quantity }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Booking Parameters form -->
+                    <div class="col-md-7">
+                        <form method="post" novalidate>
+                            {% csrf_token %}
+                            
+                            <div class="row g-3">
+                                <!-- Requested Quantity -->
+                                <div class="col-12">
+                                    <label for="{{ form.quantity.id_for_label }}" class="form-label fw-semibold small text-secondary">Requested Quantity <span class="text-danger">*</span></label>
+                                    {{ form.quantity }}
+                                    <div class="form-text small" style="font-size: 0.72rem;">Enter how many units you wish to borrow. Must not exceed available stock.</div>
+                                    {% if form.quantity.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.quantity.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Booking Date -->
+                                <div class="col-md-6">
+                                    <label for="{{ form.booking_date.id_for_label }}" class="form-label fw-semibold small text-secondary">Start Date <span class="text-danger">*</span></label>
+                                    {{ form.booking_date }}
+                                    {% if form.booking_date.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.booking_date.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Expected Return Date -->
+                                <div class="col-md-6">
+                                    <label for="{{ form.expected_return_date.id_for_label }}" class="form-label fw-semibold small text-secondary">Expected Return Date <span class="text-danger">*</span></label>
+                                    {{ form.expected_return_date }}
+                                    {% if form.expected_return_date.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.expected_return_date.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Purpose -->
+                                <div class="col-12">
+                                    <label for="{{ form.purpose.id_for_label }}" class="form-label fw-semibold small text-secondary">Purpose of Booking <span class="text-danger">*</span></label>
+                                    {{ form.purpose }}
+                                    {% if form.purpose.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.purpose.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'inventory:equipment_detail' equipment.pk %}" class="btn btn-outline-custom px-4 py-2">Cancel</a>
+                                <button type="submit" class="btn btn-primary-custom px-4 py-2">
+                                    <i class="fa-solid fa-calendar-check me-2"></i> Submit Request
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

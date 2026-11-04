@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Equipment Catalog - Lab Inventory System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Equipment Catalog</h3>
+            <p class="text-secondary small mb-0">Search, filter, and view laboratory tools, devices, and inventory status.</p>
+        </div>
+        {% if user.role == 'admin' %}
+        <div>
+            <a href="{% url 'inventory:equipment_add' %}" class="btn btn-primary-custom">
+                <i class="fa-solid fa-plus me-2"></i> Add Equipment
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Search & Filters Card -->
+    <div class="card card-custom p-4 mb-4 border-0 shadow-sm">
+        <form method="get" class="row g-3">
+            <!-- Search field -->
+            <div class="col-lg-4 col-md-6">
+                <label class="form-label fw-semibold small text-secondary">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0 text-muted">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control border-start-0" placeholder="Search by name, code, manufacturer..." value="{{ q }}">
+                </div>
+            </div>
+
+            <!-- Department filter -->
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label class="form-label fw-semibold small text-secondary">Department</label>
+                <select name="department" class="form-select">
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.pk }}" {% if selected_dept == dept.pk|stringformat:"i" %}selected{% endif %}>{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Condition filter -->
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label class="form-label fw-semibold small text-secondary">Condition</label>
+                <select name="condition" class="form-select">
+                    <option value="">All Conditions</option>
+                    {% for cond_val, cond_label in conditions %}
+                        <option value="{{ cond_val }}" {% if selected_cond == cond_val %}selected{% endif %}>{{ cond_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Status filter -->
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <label class="form-label fw-semibold small text-secondary">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    {% for stat_val, stat_label in statuses %}
+                        <option value="{{ stat_val }}" {% if selected_stat == stat_val %}selected{% endif %}>{{ stat_label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Sorting selector -->
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <label class="form-label fw-semibold small text-secondary">Sort By</label>
+                <select name="sort" class="form-select">
+                    <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Newest Added</option>
+                    <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>Oldest Added</option>
+                    <option value="name" {% if selected_sort == 'name' %}selected{% endif %}>Equipment Name</option>
+                    <option value="quantity" {% if selected_sort == 'quantity' %}selected{% endif %}>Available Quantity</option>
+                </select>
+            </div>
+
+            <!-- Actions buttons -->
+            <div class="col-12 d-flex justify-content-end gap-2 mt-3">
+                <a href="{% url 'inventory:equipment_list' %}" class="btn btn-outline-custom">Reset Filters</a>
+                <button type="submit" class="btn btn-primary-custom px-4">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Equipment List Table Card -->
+    <div class="card card-custom border-0 shadow-sm overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-4 py-3" style="width: 80px;">Preview</th>
+                        <th class="py-3" style="width: 80px;">QR Code</th>
+                        <th class="py-3">Equipment details</th>
+                        <th class="py-3">Department</th>
+                        <th class="py-3">Location</th>
+                        <th class="py-3">Status / Condition</th>
+                        <th class="py-3">Stock Qty</th>
+                        <th class="px-4 py-3 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for equip in equipment_list %}
+                        <tr>
+                            <!-- Image Preview -->
+                            <td class="px-4">
+                                {% if equip.image %}
+                                    <img src="{{ equip.image.url }}" alt="{{ equip.equipment_name }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);">
+                                {% else %}
+                                    <div class="d-flex align-items-center justify-content-center bg-light text-secondary" style="width: 50px; height: 50px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                        <i class="fa-solid fa-microscope text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            
+                            <!-- QR Code SVG -->
+                            <td>
+                                <div class="qr-thumbnail-wrapper border p-1 bg-white rounded" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                                    {{ equip.qr_code_svg|safe }}
+                                </div>
+                                <a href="{% url 'inventory:equipment_qr_download' equip.pk %}" class="small text-decoration-none d-block mt-1 font-monospace text-center" style="font-size: 0.65rem;" title="Download vector QR image">Download</a>
+                            </td>
+                            
+                            <!-- Name & Code -->
+                            <td>
+                                <a href="{% url 'inventory:equipment_detail' equip.pk %}" class="text-decoration-none fw-semibold text-primary d-block mb-0.5">
+                                    {{ equip.equipment_name }}
+                                </a>
+                                <small class="text-secondary font-monospace">{{ equip.equipment_code }}</small>
+                            </td>
+                            
+                            <!-- Department -->
+                            <td>
+                                <span class="small fw-medium text-dark">{{ equip.department.name }}</span>
+                            </td>
+                            
+                            <!-- Location -->
+                            <td>
+                                <span class="small text-secondary">{{ equip.location|default:"—" }}</span>
+                            </td>
+                            
+                            <!-- Status and Condition -->
+                            <td>
+                                <div class="d-flex flex-column gap-1 align-items-start">
+                                    <!-- Status Badge -->
+                                    {% if equip.status == 'Available' %}
+                                        <span class="badge bg-success-subtle text-success px-2 py-1 rounded-pill small" style="font-size: 0.75rem;">
+                                            <i class="fa-solid fa-circle-check me-1"></i> Available
+                                        </span>
+                                    {% elif equip.status == 'Out of Stock' %}
+                                        <span class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill small" style="font-size: 0.75rem;">
+                                            <i class="fa-solid fa-triangle-exclamation me-1"></i> Out of Stock
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning-subtle text-warning px-2 py-1 rounded-pill small" style="font-size: 0.75rem;">
+                                            <i class="fa-solid fa-screwdriver-wrench me-1"></i> Maintenance
+                                        </span>
+                                    {% endif %}
+                                    
+                                    <!-- Condition Badge -->
+                                    <small class="text-muted">
+                                        Condition: <span class="fw-medium text-dark">{{ equip.condition }}</span>
+                                    </small>
+                                </div>
+                            </td>
+                            
+                            <!-- Quantity & Low Stock Warning -->
+                            <td>
+                                <div class="d-flex flex-column gap-1 align-items-start">
+                                    <span class="fw-bold">{{ equip.available_quantity }} <span class="text-muted fw-normal">/ {{ equip.total_quantity }}</span></span>
+                                    
+                                    {% if equip.is_low_stock %}
+                                        <span class="badge bg-warning text-dark px-2 py-0.5 rounded-pill" style="font-size: 0.7rem; font-weight: 600;">
+                                            <i class="fa-solid fa-circle-exclamation"></i> Low Stock
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            
+                            <!-- Actions -->
+                            <td class="px-4 text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <a href="{% url 'inventory:equipment_detail' equip.pk %}" class="btn btn-sm btn-outline-custom text-secondary border-0" title="View Details">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                    {% if user.role == 'admin' %}
+                                        <a href="{% url 'inventory:equipment_edit' equip.pk %}" class="btn btn-sm btn-outline-primary border-0" title="Edit">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </a>
+                                        <a href="{% url 'inventory:equipment_delete' equip.pk %}" class="btn btn-sm btn-outline-danger border-0" title="Delete">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-secondary">
+                                <i class="fa-solid fa-cubes fa-3x mb-3 text-muted"></i>
+                                <p class="mb-0">No equipment matching the filter parameters was found.</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <div class="card-footer bg-white border-0 py-3">
+                <nav aria-label="Page navigation" class="d-flex justify-content-between align-items-center">
+                    <div class="text-secondary small">
+                        Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </div>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}{% if selected_dept %}&department={{ selected_dept }}{% endif %}{% if selected_cond %}&condition={{ selected_cond }}{% endif %}{% if selected_stat %}&status={{ selected_stat }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}" aria-label="First">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if selected_dept %}&department={{ selected_dept }}{% endif %}{% if selected_cond %}&condition={{ selected_cond }}{% endif %}{% if selected_stat %}&status={{ selected_stat }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}{% if selected_dept %}&department={{ selected_dept }}{% endif %}{% if selected_cond %}&condition={{ selected_cond }}{% endif %}{% if selected_stat %}&status={{ selected_stat }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if selected_dept %}&department={{ selected_dept }}{% endif %}{% if selected_cond %}&condition={{ selected_cond }}{% endif %}{% if selected_stat %}&status={{ selected_stat }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}{% if selected_dept %}&department={{ selected_dept }}{% endif %}{% if selected_cond %}&condition={{ selected_cond }}{% endif %}{% if selected_stat %}&status={{ selected_stat }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

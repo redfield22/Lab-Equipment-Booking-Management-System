@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Departments - Lab Inventory System{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">Department Management</h3>
+            <p class="text-secondary small mb-0">Create, edit, and view academic and laboratory departments.</p>
+        </div>
+        <div>
+            <a href="{% url 'inventory:department_add' %}" class="btn btn-primary-custom">
+                <i class="fa-solid fa-plus me-2"></i> Add Department
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters & Search Card -->
+    <div class="card card-custom p-3 mb-4 border-0 shadow-sm">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-9 col-sm-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0 text-muted">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control border-start-0" placeholder="Search by name or code..." value="{{ q }}">
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-4 d-grid">
+                <button type="submit" class="btn btn-primary-custom">Search</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Departments Table Card -->
+    <div class="card card-custom border-0 shadow-sm overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-4 py-3" style="width: 25%;">Department Name</th>
+                        <th class="py-3" style="width: 15%;">Code</th>
+                        <th class="py-3" style="width: 35%;">Description</th>
+                        <th class="py-3" style="width: 15%;">Created At</th>
+                        <th class="px-4 py-3 text-end" style="width: 10%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dept in departments %}
+                        <tr>
+                            <td class="px-4 fw-semibold text-primary">{{ dept.name }}</td>
+                            <td><span class="badge bg-secondary px-2.5 py-1.5">{{ dept.code }}</span></td>
+                            <td class="text-secondary text-truncate" style="max-width: 280px;">{{ dept.description|default:"—" }}</td>
+                            <td class="small text-secondary">{{ dept.created_at|date:"M d, Y" }}</td>
+                            <td class="px-4 text-end">
+                                <div class="d-inline-flex gap-2">
+                                    <a href="{% url 'inventory:department_edit' dept.pk %}" class="btn btn-sm btn-outline-primary border-0" title="Edit">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                    <a href="{% url 'inventory:department_delete' dept.pk %}" class="btn btn-sm btn-outline-danger border-0" title="Delete">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-secondary">
+                                <i class="fa-solid fa-folder-open fa-3x mb-3 text-muted"></i>
+                                <p class="mb-0">No departments found.</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <div class="card-footer bg-white border-0 py-3">
+                <nav aria-label="Page navigation" class="d-flex justify-content-between align-items-center">
+                    <div class="text-secondary small">
+                        Showing page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </div>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}" aria-label="First">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

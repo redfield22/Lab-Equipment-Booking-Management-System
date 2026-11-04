@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}System Activity Feed - Lab Inventory System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card card-custom p-4 border-0 shadow-sm">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fa-solid fa-list-ul text-primary me-2"></i> System Activity Feed</h4>
+                        <p class="text-secondary small mb-0">Audit log of all reservation requests, inventory changes, and stock alerts</p>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <form method="get" class="mb-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0 text-muted">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" name="q" class="form-control border-start-0" placeholder="Search by activity type, description message, actor name..." value="{{ q }}">
+                        <button type="submit" class="btn btn-primary-custom px-4">Search</button>
+                    </div>
+                </form>
+
+                <!-- Activity Feed Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="px-3 py-2.5">Date & Time</th>
+                                <th class="py-2.5">Category</th>
+                                <th class="py-2.5">Activity Description</th>
+                                <th class="py-2.5">Actor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in activities %}
+                                <tr>
+                                    <!-- Timestamp -->
+                                    <td class="px-3 text-secondary small" style="width: 20%;">
+                                        {{ log.created_at|date:"M d, Y, h:i a" }}
+                                    </td>
+                                    
+                                    <!-- Action Category -->
+                                    <td style="width: 22%;">
+                                        {% if 'Approved' in log.action_type %}
+                                            <span class="badge bg-success-subtle text-success border border-success rounded">{{ log.action_type }}</span>
+                                        {% elif 'Rejected' in log.action_type or 'Out of Stock' in log.action_type %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger rounded">{{ log.action_type }}</span>
+                                        {% elif 'Low Stock' in log.action_type %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning rounded">{{ log.action_type }}</span>
+                                        {% elif 'Damage' in log.action_type %}
+                                            <span class="badge bg-info-subtle text-info border border-info rounded">{{ log.action_type }}</span>
+                                        {% else %}
+                                            <span class="badge bg-primary-subtle text-primary border border-primary rounded">{{ log.action_type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <!-- Message -->
+                                    <td class="small text-dark" style="width: 43%;">{{ log.message }}</td>
+                                    
+                                    <!-- Actor -->
+                                    <td class="small fw-semibold text-secondary" style="width: 15%;">
+                                        {% if log.actor %}
+                                            {{ log.actor.full_name }}
+                                        {% else %}
+                                            <span class="text-muted italic">System</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-secondary">
+                                        <i class="fa-solid fa-clipboard-list fa-3x mb-3 text-muted"></i>
+                                        <p class="mb-0">No system activities logged yet.</p>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <div class="d-flex justify-content-center mt-4">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination pagination-sm mb-0">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item"><a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}">&laquo;&laquo;</a></li>
+                                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">&laquo;</a></li>
+                                {% endif %}
+                                
+                                <li class="page-item active"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">&raquo;</a></li>
+                                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}">&raquo;&raquo;</a></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

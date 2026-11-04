@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ equipment.equipment_name }} - Details - Lab Inventory System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb & Back -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{% url 'inventory:equipment_list' %}" class="btn btn-sm btn-outline-custom">
+            <i class="fa-solid fa-arrow-left"></i> Back to Catalog
+        </a>
+        {% if user.role == 'admin' %}
+        <div class="ms-auto d-flex gap-2">
+            <a href="{% url 'inventory:equipment_edit' equipment.pk %}" class="btn btn-sm btn-outline-primary px-3">
+                <i class="fa-solid fa-pen-to-square me-1"></i> Edit
+            </a>
+            <a href="{% url 'inventory:equipment_delete' equipment.pk %}" class="btn btn-sm btn-outline-danger px-3">
+                <i class="fa-solid fa-trash-can me-1"></i> Delete
+            </a>
+        </div>
+        {% elif user.role == 'student' %}
+        <div class="ms-auto">
+            {% if equipment.available_quantity > 0 %}
+                <a href="{% url 'bookings:booking_create' equipment.pk %}" class="btn btn-primary-custom px-4 shadow-sm">
+                    <i class="fa-solid fa-calendar-check me-2"></i> Book Equipment
+                </a>
+            {% else %}
+                <button class="btn btn-secondary px-4" disabled>
+                    <i class="fa-solid fa-ban me-2"></i> Out of Stock
+                </button>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Detail Card -->
+    <div class="card card-custom border-0 shadow-sm overflow-hidden mb-4">
+        <div class="row g-0">
+            <!-- Left Side: Image Viewer -->
+            <div class="col-md-4 bg-light d-flex align-items-center justify-content-center p-4" style="border-right: 1px solid var(--border-color); min-height: 250px;">
+                {% if equipment.image %}
+                    <img src="{{ equipment.image.url }}" alt="{{ equipment.equipment_name }}" class="img-fluid rounded shadow-sm" style="max-height: 350px; object-fit: contain; width: 100%;">
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fa-solid fa-microscope fa-6x mb-3 text-secondary" style="opacity: 0.4;"></i>
+                        <p class="small mb-0">No image uploaded for this item.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Right Side: Essential Data -->
+            <div class="col-md-8 p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                    <div>
+                        <span class="badge bg-secondary mb-2 font-monospace">{{ equipment.equipment_code }}</span>
+                        <h2 class="fw-bold mb-1">{{ equipment.equipment_name }}</h2>
+                        <p class="text-secondary mb-0"><i class="fa-solid fa-building me-1"></i> {{ equipment.department.name }}</p>
+                    </div>
+                    
+                    <div class="d-flex flex-column gap-2 align-items-end">
+                        <!-- Status Badge -->
+                        {% if equipment.status == 'Available' %}
+                            <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill">
+                                <i class="fa-solid fa-circle-check me-1"></i> Available
+                            </span>
+                        {% elif equipment.status == 'Out of Stock' %}
+                            <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill">
+                                <i class="fa-solid fa-triangle-exclamation me-1"></i> Out of Stock
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning-subtle text-warning px-3 py-2 rounded-pill">
+                                <i class="fa-solid fa-screwdriver-wrench me-1"></i> Maintenance
+                            </span>
+                        {% endif %}
+                        
+                        <!-- Low stock warning -->
+                        {% if equipment.is_low_stock %}
+                            <span class="badge bg-warning text-dark px-2.5 py-1.5 rounded-pill shadow-sm small" style="font-weight: 600;">
+                                <i class="fa-solid fa-circle-exclamation me-1"></i> Low Stock Warning
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Primary Spec Sheet -->
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <span class="text-secondary small d-block">Manufacturer</span>
+                        <span class="fw-medium text-dark">{{ equipment.manufacturer|default:"—" }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="text-secondary small d-block">Model Number</span>
+                        <span class="fw-medium text-dark">{{ equipment.model_number|default:"—" }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="text-secondary small d-block">Storage Location</span>
+                        <span class="fw-medium text-dark"><i class="fa-solid fa-location-dot text-primary me-1"></i> {{ equipment.location|default:"—" }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="text-secondary small d-block">Condition</span>
+                        <span class="fw-medium text-dark">{{ equipment.condition }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="text-secondary small d-block">Quantity (Available / Total)</span>
+                        <span class="fw-bold text-dark">{{ equipment.available_quantity }} <span class="text-muted fw-normal">/ {{ equipment.total_quantity }}</span></span>
+                    </div>
+                    {% if user.role == 'admin' %}
+                    <div class="col-sm-6">
+                        <span class="text-secondary small d-block">Purchase Cost</span>
+                        <span class="fw-medium text-success">${{ equipment.purchase_cost|default:"0.00" }}</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="text-secondary small d-block">Purchase Date</span>
+                        <span class="fw-medium text-dark">{{ equipment.purchase_date|date:"M d, Y"|default:"—" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description, Remarks & QR Code Cards -->
+    <div class="row g-4 mb-4">
+        <!-- Description -->
+        <div class="col-md-5">
+            <div class="card card-custom p-4 border-0 shadow-sm h-100">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-align-left text-primary me-2"></i> Item Description</h5>
+                <p class="text-secondary mb-0" style="white-space: pre-line; line-height: 1.6;">
+                    {{ equipment.description|default:"No description provided for this item." }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Remarks -->
+        <div class="col-md-4">
+            <div class="card card-custom p-4 border-0 shadow-sm h-100">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-comment-dots text-primary me-2"></i> Remarks / Notes</h5>
+                <p class="text-secondary mb-0" style="white-space: pre-line; line-height: 1.6;">
+                    {{ equipment.remarks|default:"No remarks or technical notes registered." }}
+                </p>
+            </div>
+        </div>
+
+        <!-- QR Code -->
+        <div class="col-md-3">
+            <div class="card card-custom p-4 border-0 shadow-sm h-100 text-center d-flex flex-column align-items-center justify-content-center">
+                <h5 class="fw-bold mb-3 text-start w-100"><i class="fa-solid fa-qrcode text-primary me-2"></i> Equipment QR</h5>
+                <div class="border p-2 bg-white rounded mb-3" style="width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                    {{ equipment.qr_code_svg|safe }}
+                </div>
+                <a href="{% url 'inventory:equipment_qr_download' equipment.pk %}" class="btn btn-sm btn-primary-custom w-100 py-2">
+                    <i class="fa-solid fa-download me-1"></i> Download QR (SVG)
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

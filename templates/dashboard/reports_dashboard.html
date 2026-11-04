@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reports & Exports Dashboard - Lab Inventory System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="mb-4">
+        <h3 class="fw-bold mb-1"><i class="fa-solid fa-file-invoice text-primary me-2"></i> Reports & Document Exports</h3>
+        <p class="text-secondary small mb-0">Generate and export professional ReportLab PDF and Excel spreadsheet documents</p>
+    </div>
+
+    <!-- Stat Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-custom p-3 border-start border-4 border-primary shadow-sm h-100">
+                <span class="text-secondary small fw-semibold">Equipment Groups</span>
+                <h3 class="fw-bold mb-0 mt-1">{{ stats.total_equipment }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-custom p-3 border-start border-4 border-success shadow-sm h-100">
+                <span class="text-secondary small fw-semibold">Available Units</span>
+                <h3 class="fw-bold mb-0 mt-1 text-success">{{ stats.available_equipment }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-custom p-3 border-start border-4 border-warning shadow-sm h-100">
+                <span class="text-secondary small fw-semibold">Out of Stock Items</span>
+                <h3 class="fw-bold mb-0 mt-1 text-danger">{{ stats.out_of_stock }}</h3>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card card-custom p-3 border-start border-4 border-info shadow-sm h-100">
+                <span class="text-secondary small fw-semibold">Damage Reports</span>
+                <h3 class="fw-bold mb-0 mt-1 text-warning">{{ stats.total_damages }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Side: Exports list -->
+        <div class="col-lg-8">
+            <div class="card card-custom p-4 border-0 shadow-sm mb-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2">Export Data Documents</h5>
+                
+                <div class="list-group list-group-flush">
+                    <!-- 1. Equipment -->
+                    <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h6 class="fw-bold mb-0">Equipment Inventory Report</h6>
+                            <p class="text-secondary mb-0 small" style="font-size: 0.72rem;">Lists all physical resources, stock counts, location storage and status flags.</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'dashboard:export_equipment_pdf' %}" class="btn btn-sm btn-outline-danger">
+                                <i class="fa-solid fa-file-pdf me-1"></i> Export PDF
+                            </a>
+                            <a href="{% url 'dashboard:export_equipment_excel' %}" class="btn btn-sm btn-outline-success">
+                                <i class="fa-solid fa-file-excel me-1"></i> Export Excel
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 2. Departments -->
+                    <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h6 class="fw-bold mb-0">Department Classification Report</h6>
+                            <p class="text-secondary mb-0 small" style="font-size: 0.72rem;">Lists all academic department groups, equipment type aggregates and descriptions.</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'dashboard:export_department_pdf' %}" class="btn btn-sm btn-outline-danger">
+                                <i class="fa-solid fa-file-pdf me-1"></i> Export PDF
+                            </a>
+                            <a href="{% url 'dashboard:export_department_excel' %}" class="btn btn-sm btn-outline-success">
+                                <i class="fa-solid fa-file-excel me-1"></i> Export Excel
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 3. Bookings -->
+                    <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h6 class="fw-bold mb-0">Equipment Reservation Requests Report</h6>
+                            <p class="text-secondary mb-0 small" style="font-size: 0.72rem;">Lists all student bookings, request dates, quantities, purposes and statuses.</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'dashboard:export_booking_pdf' %}" class="btn btn-sm btn-outline-danger">
+                                <i class="fa-solid fa-file-pdf me-1"></i> Export PDF
+                            </a>
+                            <a href="{% url 'dashboard:export_booking_excel' %}" class="btn btn-sm btn-outline-success">
+                                <i class="fa-solid fa-file-excel me-1"></i> Export Excel
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 4. Damage Reports -->
+                    <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h6 class="fw-bold mb-0">Equipment Damages & Repairs Report</h6>
+                            <p class="text-secondary mb-0 small" style="font-size: 0.72rem;">Lists all filed damage report files, severity tiers, related bookings, and resolution statuses.</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'dashboard:export_damage_pdf' %}" class="btn btn-sm btn-outline-danger">
+                                <i class="fa-solid fa-file-pdf me-1"></i> Export PDF
+                            </a>
+                            <a href="{% url 'dashboard:export_damage_excel' %}" class="btn btn-sm btn-outline-success">
+                                <i class="fa-solid fa-file-excel me-1"></i> Export Excel
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 5. Summary -->
+                    <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h6 class="fw-bold mb-0">Inventory General Summary Report</h6>
+                            <p class="text-secondary mb-0 small" style="font-size: 0.72rem;">Overview of total metrics, stock levels, booking statistics and resolution aggregates.</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'dashboard:export_summary_pdf' %}" class="btn btn-sm btn-outline-danger">
+                                <i class="fa-solid fa-file-pdf me-1"></i> Export Summary PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Recent Activity -->
+        <div class="col-lg-4">
+            <div class="card card-custom p-4 border-0 shadow-sm h-100">
+                <h5 class="fw-bold mb-3 border-bottom pb-2">Recent System Activities</h5>
+                <div class="list-group list-group-flush" style="max-height: 380px; overflow-y: auto;">
+                    {% for activity in recent_activities %}
+                        <div class="list-group-item px-0 py-2.5 border-0">
+                            <div class="d-flex justify-content-between">
+                                <span class="badge bg-light text-secondary border small">{{ activity.action_type }}</span>
+                                <small class="text-secondary" style="font-size: 0.65rem;">{{ activity.created_at|date:"M d, H:i" }}</small>
+                            </div>
+                            <p class="text-dark small mb-0 mt-1" style="font-size: 0.75rem; line-height: 1.3;">{{ activity.message }}</p>
+                        </div>
+                    {% empty %}
+                        <p class="text-secondary small mb-0">No activities logged yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

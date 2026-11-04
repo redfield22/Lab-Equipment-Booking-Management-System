@@ -1,0 +1,413 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Lab Inventory System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fa-solid fa-gauge text-primary me-2"></i> Admin Analytics Dashboard</h3>
+            <p class="text-secondary small mb-0">Overview of equipment availability, booking states, active reservations, and reports.</p>
+        </div>
+        <div>
+            <a href="{% url 'dashboard:activity_list' %}" class="btn btn-outline-custom text-primary">
+                <i class="fa-solid fa-clock-rotate-left me-1"></i> Full Audit Logs
+            </a>
+        </div>
+    </div>
+
+    <!-- 10 Statistics Cards Grid -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Total Departments -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom p-3 border-start border-4 border-info h-100 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase">Departments</span>
+                        <h4 class="fw-bold mb-0 mt-1">{{ stats.total_departments }}</h4>
+                    </div>
+                    <div class="p-2 bg-light rounded text-info">
+                        <i class="fa-solid fa-building-user"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Total Equipment -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom p-3 border-start border-4 border-primary h-100 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase">Equip Types</span>
+                        <h4 class="fw-bold mb-0 mt-1">{{ stats.total_equipment }}</h4>
+                    </div>
+                    <div class="p-2 bg-light rounded text-primary">
+                        <i class="fa-solid fa-microscope"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Available Equipment -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom p-3 border-start border-4 border-success h-100 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase">Avail Units</span>
+                        <h4 class="fw-bold mb-0 mt-1 text-success">{{ stats.available_equipment }}</h4>
+                    </div>
+                    <div class="p-2 bg-light rounded text-success">
+                        <i class="fa-solid fa-square-check"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Booked Equipment -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom p-3 border-start border-4 border-indigo h-100 shadow-sm" style="border-left-color: #6610f2 !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase">Booked Units</span>
+                        <h4 class="fw-bold mb-0 mt-1" style="color: #6610f2;">{{ stats.booked_equipment }}</h4>
+                    </div>
+                    <div class="p-2 bg-light rounded" style="color: #6610f2;">
+                        <i class="fa-solid fa-cart-flatbed-suitcases"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Low Stock Alerts -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom p-3 border-start border-4 border-warning h-100 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase">Low Stock</span>
+                        <h4 class="fw-bold mb-0 mt-1 text-warning">{{ stats.low_stock_alerts }}</h4>
+                    </div>
+                    <div class="p-2 bg-light rounded text-warning">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Pending Requests -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom p-3 border-start border-4 border-warning h-100 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase">Pending Req</span>
+                        <h4 class="fw-bold mb-0 mt-1 text-warning">{{ stats.pending_requests }}</h4>
+                    </div>
+                    <div class="p-2 bg-light rounded text-warning">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Approved Requests -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom p-3 border-start border-4 border-success h-100 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase">Approved Req</span>
+                        <h4 class="fw-bold mb-0 mt-1 text-success">{{ stats.approved_bookings }}</h4>
+                    </div>
+                    <div class="p-2 bg-light rounded text-success">
+                        <i class="fa-solid fa-check-double"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. Rejected Requests -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom p-3 border-start border-4 border-danger h-100 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase">Rejected Req</span>
+                        <h4 class="fw-bold mb-0 mt-1 text-danger">{{ stats.rejected_bookings }}</h4>
+                    </div>
+                    <div class="p-2 bg-light rounded text-danger">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. Returned Requests -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom p-3 border-start border-4 border-primary h-100 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase">Returned Req</span>
+                        <h4 class="fw-bold mb-0 mt-1 text-primary">{{ stats.returned_bookings }}</h4>
+                    </div>
+                    <div class="p-2 bg-light rounded text-primary">
+                        <i class="fa-solid fa-box"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. Damage Reports -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom p-3 border-start border-4 border-danger h-100 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase">Damage Rep</span>
+                        <h4 class="fw-bold mb-0 mt-1 text-danger">{{ stats.damage_reports }}</h4>
+                    </div>
+                    <div class="p-2 bg-light rounded text-danger">
+                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row g-4 mb-4">
+        <!-- Equipment Availability (Doughnut) -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card card-custom p-4 border-0 shadow-sm h-100">
+                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-pie text-primary me-2"></i> Equipment Availability</h6>
+                <div class="chart-container position-relative" style="height: 220px;">
+                    <canvas id="availabilityChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Statuses (Pie) -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card card-custom p-4 border-0 shadow-sm h-100">
+                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-circle-half-stroke text-primary me-2"></i> Booking Statuses</h6>
+                <div class="chart-container position-relative" style="height: 220px;">
+                    <canvas id="bookingStatusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Damage Reports severity (Bar) -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card card-custom p-4 border-0 shadow-sm h-100">
+                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-bar text-primary me-2"></i> Damage Reports Severity</h6>
+                <div class="chart-container position-relative" style="height: 220px;">
+                    <canvas id="damageSeverityChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Department-wise Equipment Distribution (Bar) -->
+        <div class="col-lg-6 col-md-12">
+            <div class="card card-custom p-4 border-0 shadow-sm h-100">
+                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-simple text-primary me-2"></i> Department Stock Distribution</h6>
+                <div class="chart-container position-relative" style="height: 260px;">
+                    <canvas id="departmentChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly booking trends (Line) -->
+        <div class="col-lg-6 col-md-12">
+            <div class="card card-custom p-4 border-0 shadow-sm h-100">
+                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i> Monthly Booking Trends</h6>
+                <div class="chart-container position-relative" style="height: 260px;">
+                    <canvas id="monthlyTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs & Warnings Lists -->
+    <div class="row g-4">
+        <!-- Left: System Activity Feed -->
+        <div class="col-lg-7">
+            <div class="card card-custom p-4 border-0 shadow-sm h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">System Activity Feed</h5>
+                    <a href="{% url 'dashboard:activity_list' %}" class="small text-decoration-none">View All</a>
+                </div>
+                <div class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
+                    {% for activity in recent_activities %}
+                        <div class="list-group-item px-0 py-2.5 border-0 d-flex justify-content-between align-items-start gap-2">
+                            <div>
+                                <span class="badge 
+                                    {% if 'Approved' in activity.action_type %}bg-success-subtle text-success
+                                    {% elif 'Rejected' in activity.action_type %}bg-danger-subtle text-danger
+                                    {% elif 'Low Stock' in activity.action_type %}bg-warning-subtle text-warning
+                                    {% else %}bg-primary-subtle text-primary{% endif %} rounded me-2 small">
+                                    {{ activity.action_type }}
+                                </span>
+                                <span class="small text-dark fw-medium">{{ activity.message }}</span>
+                            </div>
+                            <span class="small text-secondary font-monospace" style="font-size: 0.7rem; white-space: nowrap;">{{ activity.created_at|date:"M d, H:i" }}</span>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-4 text-secondary small">No recent activities.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Low Stock Warnings -->
+        <div class="col-lg-5">
+            <div class="card card-custom p-4 border-0 shadow-sm h-100 border-start border-4 border-warning">
+                <h5 class="fw-bold mb-3 text-dark"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i> Low Stock Warnings</h5>
+                <p class="text-secondary small mb-3">The following equipment items have 2 or fewer units left in inventory:</p>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead>
+                            <tr>
+                                <th>Equipment</th>
+                                <th>Code</th>
+                                <th class="text-end">Stock Left</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in low_stock_items %}
+                                <tr>
+                                    <td><a href="{% url 'inventory:equipment_detail' item.pk %}" class="fw-bold text-decoration-none text-danger">{{ item.equipment_name }}</a></td>
+                                    <td class="font-monospace text-secondary">{{ item.equipment_code }}</td>
+                                    <td class="text-end fw-bold text-danger">{{ item.available_quantity }} / {{ item.total_quantity }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-success fw-semibold">
+                                        <i class="fa-solid fa-circle-check me-1"></i> All stock levels are sufficient.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js and rendering scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fetch chart statistics dynamically
+    fetch('{% url "dashboard:charts_data" %}')
+        .then(res => res.json())
+        .then(data => {
+            // 1. Availability Doughnut Chart
+            new Chart(document.getElementById('availabilityChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: data.availability.labels,
+                    datasets: [{
+                        data: data.availability.values,
+                        backgroundColor: ['#28a745', '#6610f2'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            // 2. Booking Statuses Pie Chart
+            new Chart(document.getElementById('bookingStatusChart').getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels: data.booking_statuses.labels,
+                    datasets: [{
+                        data: data.booking_statuses.values,
+                        backgroundColor: ['#ffc107', '#28a745', '#dc3545', '#17a2b8', '#6c757d'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            // 3. Damage Severity Bar Chart
+            new Chart(document.getElementById('damageSeverityChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: data.damage_severity.labels,
+                    datasets: [{
+                        label: 'Reports count',
+                        data: data.damage_severity.values,
+                        backgroundColor: ['#6c757d', '#ffc107', '#fd7e14', '#dc3545'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+
+            // 4. Department Distribution Horizontal Bar Chart
+            new Chart(document.getElementById('departmentChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: data.departments.labels,
+                    datasets: [{
+                        label: 'Equipment Count',
+                        data: data.departments.values,
+                        backgroundColor: '#0d6efd',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+
+            // 5. Monthly Trend Line Chart
+            new Chart(document.getElementById('monthlyTrendChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: data.monthly_trend.labels,
+                    datasets: [{
+                        label: 'Bookings Created',
+                        data: data.monthly_trend.values,
+                        borderColor: '#0dcaf0',
+                        backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+        });
+});
+</script>
+
+<style>
+    @media (min-width: 768px) {
+        .col-md-2\.4 {
+            flex: 0 0 20%;
+            max-width: 20%;
+        }
+    }
+</style>
+{% endblock %}

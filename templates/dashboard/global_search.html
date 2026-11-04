@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Global Search Results - Lab Inventory System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="mb-4">
+        <h3 class="fw-bold mb-1"><i class="fa-solid fa-magnifying-glass text-primary me-2"></i> Global Search Results</h3>
+        <p class="text-secondary small mb-0">Search results for query: <mark class="px-2 fw-semibold">"{{ q }}"</mark></p>
+    </div>
+
+    <!-- Search input -->
+    <div class="card card-custom p-4 mb-4 border-0 shadow-sm">
+        <form method="get" action="{% url 'dashboard:global_search' %}">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0 text-muted">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </span>
+                <input type="text" name="q" class="form-control border-start-0" placeholder="Type search term (equipment name, code, department, student, booking ID...)" value="{{ q }}" required>
+                <button type="submit" class="btn btn-primary-custom px-4">Search System</button>
+            </div>
+        </form>
+    </div>
+
+    {% if q %}
+        <div class="mb-3 text-secondary small">
+            Found {{ results.total_count }} total record(s).
+        </div>
+
+        <div class="row g-4">
+            <!-- 1. Equipment Results -->
+            <div class="col-12">
+                <div class="card card-custom p-4 border-0 shadow-sm">
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                        <i class="fa-solid fa-flask-vial text-primary me-2"></i> Equipment Matches ({{ results.equipments|length }})
+                    </h5>
+                    {% if results.equipments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Name</th>
+                                        <th>Department</th>
+                                        <th>Location</th>
+                                        <th>Stock</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                tbody
+                                <tbody>
+                                    {% for eq in results.equipments %}
+                                        <tr>
+                                            <td class="font-monospace fw-bold text-primary">{{ eq.equipment_code }}</td>
+                                            <td><a href="{% url 'inventory:equipment_detail' eq.pk %}" class="fw-semibold text-decoration-none">{{ eq.equipment_name }}</a></td>
+                                            <td>{{ eq.department.name }}</td>
+                                            <td>{{ eq.location|default:"—" }}</td>
+                                            <td>{{ eq.available_quantity }} / {{ eq.total_quantity }}</td>
+                                            <td><span class="badge bg-light text-dark border">{{ eq.status }}</span></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-secondary mb-0 small">No matching equipment records found.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 2. Department Results -->
+            <div class="col-12">
+                <div class="card card-custom p-4 border-0 shadow-sm">
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                        <i class="fa-solid fa-building-user text-primary me-2"></i> Department Matches ({{ results.departments|length }})
+                    </h5>
+                    {% if results.departments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Name</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for d in results.departments %}
+                                        <tr>
+                                            <td class="font-monospace fw-bold">{{ d.code }}</td>
+                                            <td>{{ d.name }}</td>
+                                            <td class="text-truncate" style="max-width: 300px;">{{ d.description|default:"—" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-secondary mb-0 small">No matching department records found.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 3. Student Matches (Admins Only) -->
+            {% if user.role == 'admin' %}
+            <div class="col-12">
+                <div class="card card-custom p-4 border-0 shadow-sm">
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                        <i class="fa-solid fa-user text-primary me-2"></i> Student Matches ({{ results.students|length }})
+                    </h5>
+                    {% if results.students %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Role</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for s in results.students %}
+                                        <tr>
+                                            <td class="fw-bold text-dark">{{ s.full_name }}</td>
+                                            <td>{{ s.email }}</td>
+                                            <td>{{ s.phone_number|default:"—" }}</td>
+                                            <td class="text-capitalize">{{ s.role }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-secondary mb-0 small">No matching user accounts found.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 4. Bookings Results -->
+            <div class="col-12">
+                <div class="card card-custom p-4 border-0 shadow-sm">
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                        <i class="fa-solid fa-calendar-check text-primary me-2"></i> Bookings Matches ({{ results.bookings|length }})
+                    </h5>
+                    {% if results.bookings %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead>
+                                    <tr>
+                                        <th>Booking ID</th>
+                                        {% if user.role == 'admin' %}<th>Student</th>{% endif %}
+                                        <th>Equipment</th>
+                                        <th>Qty</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for b in results.bookings %}
+                                        <tr>
+                                            <td class="font-monospace fw-bold text-primary"><a href="{% url 'bookings:booking_detail' b.pk %}">{{ b.booking_id }}</a></td>
+                                            {% if user.role == 'admin' %}<td>{{ b.student.full_name }}</td>{% endif %}
+                                            <td>{{ b.equipment.equipment_name }}</td>
+                                            <td>{{ b.quantity }}</td>
+                                            <td>{{ b.booking_date|date:"Y-m-d" }}</td>
+                                            <td><span class="badge bg-light text-dark border">{{ b.status }}</span></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-secondary mb-0 small">No matching booking records found.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 5. Damage Reports Results -->
+            <div class="col-12">
+                <div class="card card-custom p-4 border-0 shadow-sm">
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                        <i class="fa-solid fa-circle-exclamation text-primary me-2"></i> Damage Reports Matches ({{ results.damage_reports|length }})
+                    </h5>
+                    {% if results.damage_reports %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead>
+                                    <tr>
+                                        <th>Report ID</th>
+                                        <th>Booking ID</th>
+                                        {% if user.role == 'admin' %}<th>Student</th>{% endif %}
+                                        <th>Equipment</th>
+                                        <th>Severity</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for dr in results.damage_reports %}
+                                        <tr>
+                                            <td class="font-monospace fw-bold text-danger"><a href="{% url 'bookings:report_detail' dr.pk %}">{{ dr.report_id }}</a></td>
+                                            <td class="font-monospace">{{ dr.booking.booking_id }}</td>
+                                            {% if user.role == 'admin' %}<td>{{ dr.student.full_name }}</td>{% endif %}
+                                            <td>{{ dr.equipment.equipment_name }}</td>
+                                            <td>{{ dr.severity }}</td>
+                                            <td><span class="badge bg-light text-dark border">{{ dr.status }}</span></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-secondary mb-0 small">No matching damage report files found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5 text-secondary">
+            <i class="fa-solid fa-keyboard fa-3x mb-3 text-muted"></i>
+            <p class="mb-0">Please type a search query in the bar above to search the database.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

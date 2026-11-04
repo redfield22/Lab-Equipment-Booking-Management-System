@@ -1,0 +1,365 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Lab Inventory System{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        .no-caret::after {
+            display: none !important;
+        }
+        .text-truncate-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;  
+            overflow: hidden;
+        }
+        .qr-thumbnail-wrapper svg {
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Main Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-custom py-3">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand navbar-brand-custom d-flex align-items-center gap-2 text-decoration-none" href="{% url 'home' %}">
+                {% if system_settings.logo %}
+                    <img src="{{ system_settings.logo.url }}" alt="Logo" style="height: 32px; object-fit: contain;">
+                {% else %}
+                    <i class="fa-solid fa-flask-vial fa-lg text-primary"></i>
+                {% endif %}
+                <div class="d-flex flex-column text-start">
+                    <span class="fw-bold mb-0 text-dark" style="font-size: 0.95rem; line-height: 1.1;">{{ system_settings.college_name }}</span>
+                    <small class="text-secondary" style="font-size: 0.65rem; line-height: 1.1;">{{ system_settings.lab_name }}</small>
+                </div>
+            </a>
+            
+            {% if user.is_authenticated %}
+            <!-- Mobile Sidebar Toggle -->
+            <button class="btn btn-outline-custom d-md-none me-2" id="sidebarCollapse" type="button">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            {% endif %}
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarContent">
+                {% if user.is_authenticated %}
+                <form class="d-none d-md-flex ms-3 me-auto" action="{% url 'dashboard:global_search' %}" method="get" style="width: 260px;">
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="q" class="form-control bg-light border-0" placeholder="Global search..." style="border-radius: 20px 0 0 20px; padding-left: 15px;">
+                        <button class="btn btn-primary-custom" type="submit" style="border-radius: 0 20px 20px 0; border: 0; background: var(--primary-color); color: white;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+                <ul class="navbar-nav ms-auto align-items-center gap-2 mt-2 mt-lg-0">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-medium px-3" href="{% url 'dashboard:dashboard_redirect' %}">
+                                <i class="fa-solid fa-chart-line me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        
+                        <!-- Notifications Bell Dropdown -->
+                        <li class="nav-item dropdown me-2">
+                            <a class="nav-link text-dark fw-medium px-3 position-relative dropdown-toggle no-caret" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-bell fa-lg"></i>
+                                {% if unread_notifications_count > 0 %}
+                                    <span class="position-absolute translate-middle badge rounded-pill bg-danger notification-badge" style="top: 8px; left: 32px; font-size: 0.65rem;">
+                                        {{ unread_notifications_count }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end p-2 shadow border-0" aria-labelledby="notificationDropdown" style="width: 320px; border-radius: 12px; margin-top: 10px;">
+                                <div class="d-flex justify-content-between align-items-center px-2 py-1 mb-2 border-bottom">
+                                    <span class="fw-bold text-dark small">Notifications</span>
+                                    {% if unread_notifications_count > 0 %}
+                                        <button id="mark-all-read-header-btn" class="btn btn-sm text-primary p-0 border-0 bg-transparent font-monospace" style="font-size: 0.72rem;">
+                                            Mark all read
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                <div class="notification-dropdown-list" style="max-height: 280px; overflow-y: auto;">
+                                    {% for notif in latest_notifications %}
+                                        <li class="p-2 mb-1 rounded {% if not notif.is_read %}bg-light{% endif %}" style="list-style: none;">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <span class="fw-bold small text-dark d-block text-truncate" style="max-width: 200px; font-size: 0.78rem;">{{ notif.title }}</span>
+                                                <span class="text-secondary" style="font-size: 0.65rem;">{{ notif.created_at|date:"M d" }}</span>
+                                            </div>
+                                            <p class="text-secondary small mb-1" style="font-size: 0.72rem; line-height: 1.2;">{{ notif.message }}</p>
+                                            {% if not notif.is_read %}
+                                                <button class="btn btn-sm text-primary p-0 border-0 bg-transparent mark-read-header-btn" data-id="{{ notif.pk }}" style="font-size: 0.65rem; font-family: monospace;">
+                                                    Mark as read
+                                                </button>
+                                            {% endif %}
+                                        </li>
+                                    {% empty %}
+                                        <li class="text-center py-4 text-secondary small">No notifications</li>
+                                    {% endfor %}
+                                </div>
+                                <div class="border-top text-center pt-2">
+                                    <a href="{% url 'dashboard:notification_list' %}" class="small text-primary text-decoration-none fw-semibold">View All Notifications</a>
+                                </div>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-medium px-3 d-flex align-items-center gap-2" href="{% url 'profile' %}">
+                                {% if user.profile_image %}
+                                    <img src="{{ user.profile_image.url }}" alt="Avatar" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover;">
+                                {% else %}
+                                    <i class="fa-solid fa-user me-1"></i>
+                                {% endif %}
+                                <span>Profile</span>
+                            </a>
+                        </li>
+                        <li class="nav-item ms-lg-2">
+                            <form action="{% url 'logout' %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger px-3 py-2" style="border-radius: 8px;">
+                                    <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+                                </button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-medium px-3" href="{% url 'home' %}">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-medium px-3" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item ms-lg-2">
+                            <a class="btn btn-primary-custom" href="{% url 'register' %}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content & Sidebar Wrapper -->
+    {% if user.is_authenticated and not hide_sidebar %}
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header d-flex align-items-center gap-3">
+                {% if user.profile_image %}
+                    <img src="{{ user.profile_image.url }}" alt="Profile" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                {% else %}
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white;">
+                        {{ user.full_name|slice:":1"|upper }}
+                    </div>
+                {% endif %}
+                <div>
+                    <h6 class="mb-0 text-white text-truncate" style="max-width: 140px;">{{ user.full_name }}</h6>
+                    <small class="text-muted text-capitalize">{{ user.role }}</small>
+                </div>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li class="sidebar-item {% if request.resolver_match.view_name == 'dashboard:admin_dashboard' or request.resolver_match.view_name == 'dashboard:student_dashboard' %}active{% endif %}">
+                    <a href="{% url 'dashboard:dashboard_redirect' %}">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                {% if user.role == 'admin' %}
+                <li class="sidebar-item {% if 'department' in request.resolver_match.view_name %}active{% endif %}">
+                    <a href="{% url 'inventory:department_list' %}">
+                        <i class="fa-solid fa-building-user"></i>
+                        <span>Departments</span>
+                    </a>
+                </li>
+                {% endif %}
+                <li class="sidebar-item {% if 'equipment' in request.resolver_match.view_name %}active{% endif %}">
+                    <a href="{% url 'inventory:equipment_list' %}">
+                        <i class="fa-solid fa-flask-vial"></i>
+                        <span>Equipment</span>
+                    </a>
+                </li>
+                <li class="sidebar-item {% if 'booking' in request.resolver_match.view_name %}active{% endif %}">
+                    <a href="{% url 'bookings:booking_list' %}">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span>Bookings</span>
+                    </a>
+                </li>
+                <li class="sidebar-item {% if 'report' in request.resolver_match.view_name %}active{% endif %}">
+                    <a href="{% url 'bookings:report_list' %}">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span>Damage Reports</span>
+                    </a>
+                </li>
+                {% if user.role == 'admin' %}
+                <li class="sidebar-item {% if 'activity' in request.resolver_match.view_name %}active{% endif %}">
+                    <a href="{% url 'dashboard:activity_list' %}">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>Activity Feed</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% if user.role == 'admin' %}
+                <li class="sidebar-item {% if 'reports_dashboard' in request.resolver_match.view_name %}active{% endif %}">
+                    <a href="{% url 'dashboard:reports_dashboard' %}">
+                        <i class="fa-solid fa-file-invoice"></i>
+                        <span>Reports & Exports</span>
+                    </a>
+                </li>
+                <li class="sidebar-item {% if 'settings' in request.resolver_match.view_name %}active{% endif %}">
+                    <a href="{% url 'dashboard:settings' %}">
+                        <i class="fa-solid fa-gears"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+            
+            <div class="p-3 border-top border-secondary">
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-light w-100 py-2" style="border-radius: 8px;">
+                        <i class="fa-solid fa-right-from-bracket me-2"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Alert message block -->
+            {% if messages %}
+                <div class="container-fluid px-0 mb-4">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert" style="border-radius: 10px;">
+                            {% if message.tags == 'success' %}
+                                <i class="fa-solid fa-circle-check me-2"></i>
+                            {% elif message.tags == 'danger' %}
+                                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                            {% else %}
+                                <i class="fa-solid fa-circle-info me-2"></i>
+                            {% endif %}
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    {% else %}
+    <!-- Full-width page context (without sidebar) -->
+    <main class="flex-grow-1">
+        <!-- Alert message block -->
+        {% if messages %}
+            <div class="container mt-4">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert" style="border-radius: 10px;">
+                        {% if message.tags == 'success' %}
+                            <i class="fa-solid fa-circle-check me-2"></i>
+                        {% elif message.tags == 'danger' %}
+                            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-info me-2"></i>
+                        {% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block main_content %}{% endblock %}
+    </main>
+    {% endif %}
+
+    <!-- Footer -->
+    <footer class="bg-white border-top text-center py-4 mt-auto text-muted">
+        <div class="container">
+            <p class="mb-0">&copy; 2026 LabInventory System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Custom JavaScript -->
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mark individual notification as read in header dropdown
+        document.querySelectorAll('.mark-read-header-btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const id = this.getAttribute('data-id');
+                const item = this.closest('li');
+                const self = this;
+                
+                fetch(`/dashboard/notifications/${id}/mark-read/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        item.classList.remove('bg-light');
+                        self.remove();
+                        
+                        // Update count badge in header
+                        const badges = document.querySelectorAll('.notification-badge');
+                        badges.forEach(badge => {
+                            let count = parseInt(badge.textContent);
+                            if (count > 1) {
+                                badge.textContent = count - 1;
+                            } else {
+                                badge.remove();
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+        // Mark all notifications as read in header dropdown
+        const markAllHeaderBtn = document.getElementById('mark-all-read-header-btn');
+        if (markAllHeaderBtn) {
+            markAllHeaderBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                fetch('/dashboard/notifications/mark-all-read/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        window.location.reload();
+                    }
+                });
+            });
+        }
+    });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

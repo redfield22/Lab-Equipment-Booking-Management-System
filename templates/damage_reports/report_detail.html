@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Damage Report Details - {{ report.report_id }} - Lab Inventory System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{% url 'bookings:report_list' %}" class="btn btn-sm btn-outline-custom">
+            <i class="fa-solid fa-arrow-left"></i> Back to List
+        </a>
+        <span class="ms-auto font-monospace text-secondary small">Report ID: {{ report.report_id }}</span>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Side: Detail Cards -->
+        <div class="col-lg-7">
+            <div class="card card-custom p-4 border-0 shadow-sm mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Damage Report Specs</h5>
+                    <!-- Status Badge -->
+                    {% if report.status == 'Resolved' %}
+                        <span class="badge bg-success text-white px-3 py-2 rounded-pill">Resolved</span>
+                    {% elif report.status == 'Under Review' %}
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill" style="background-color: #fd7e14 !important; color: white !important;">Under Review</span>
+                    {% elif report.status == 'Rejected' %}
+                        <span class="badge bg-danger text-white px-3 py-2 rounded-pill">Rejected</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Pending Review</span>
+                    {% endif %}
+                </div>
+
+                <hr class="my-3">
+
+                <!-- Spec Grid -->
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6">
+                        <span class="text-secondary small d-block">Reported Title</span>
+                        <span class="fw-bold text-dark">{{ report.title }}</span>
+                    </div>
+
+                    <div class="col-sm-6">
+                        <span class="text-secondary small d-block">Severity Level</span>
+                        {% if report.severity == 'Critical' %}
+                            <span class="badge bg-danger text-white rounded-pill px-2.5 py-1">Critical</span>
+                        {% elif report.severity == 'High' %}
+                            <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1" style="background-color: #fd7e14 !important; color: white !important;">High</span>
+                        {% elif report.severity == 'Medium' %}
+                            <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1">Medium</span>
+                        {% else %}
+                            <span class="badge bg-secondary text-white rounded-pill px-2.5 py-1">Low</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-sm-6">
+                        <span class="text-secondary small d-block">Target Equipment</span>
+                        <a href="{% url 'inventory:equipment_detail' report.equipment.pk %}" class="fw-bold text-decoration-none">
+                            {{ report.equipment.equipment_name }}
+                        </a>
+                        <small class="d-block text-secondary font-monospace">{{ report.equipment.equipment_code }}</small>
+                    </div>
+
+                    <div class="col-sm-6">
+                        <span class="text-secondary small d-block">Related Booking</span>
+                        <a href="{% url 'bookings:booking_detail' report.booking.pk %}" class="fw-semibold text-decoration-none">
+                            {{ report.booking.booking_id }}
+                        </a>
+                        <small class="d-block text-secondary">Returned: {{ report.booking.actual_return_date|date:"M d, Y" }}</small>
+                    </div>
+
+                    {% if user.role == 'admin' %}
+                    <div class="col-sm-6">
+                        <span class="text-secondary small d-block">Reporting Student</span>
+                        <span class="fw-semibold text-dark">{{ report.student.full_name }}</span>
+                        <small class="d-block text-secondary">{{ report.student.email }}</small>
+                    </div>
+                    {% endif %}
+
+                    <div class="col-sm-6">
+                        <span class="text-secondary small d-block">Submitted Date</span>
+                        <span class="fw-medium text-dark">{{ report.created_at|date:"M d, Y, h:i a" }}</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <span class="text-secondary small d-block mb-1">Detailed Description</span>
+                    <p class="p-3 bg-light rounded text-dark small mb-0" style="white-space: pre-line;">{{ report.description }}</p>
+                </div>
+
+                {% if report.admin_remarks %}
+                <div>
+                    <span class="text-secondary small d-block mb-1">Admin Response Remarks</span>
+                    <p class="p-3 bg-light rounded text-danger small mb-0" style="white-space: pre-line;">{{ report.admin_remarks }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Side: Attached image & Admin Action -->
+        <div class="col-lg-5">
+            <!-- Attached Image Card -->
+            {% if report.image %}
+                <div class="card card-custom p-4 border-0 shadow-sm text-center mb-4">
+                    <h5 class="fw-bold text-start mb-3"><i class="fa-solid fa-image text-primary me-2"></i> Attached Photo</h5>
+                    <img src="{{ report.image.url }}" alt="{{ report.report_id }}" class="img-fluid rounded border shadow-sm" style="max-height: 280px; object-fit: contain;">
+                </div>
+            {% endif %}
+
+            <!-- Admin Actions Form -->
+            {% if user.role == 'admin' %}
+                <div class="card card-custom p-4 border-0 shadow-sm">
+                    <h5 class="fw-bold mb-3"><i class="fa-solid fa-shield-halved text-primary me-2"></i> Report Resolution</h5>
+                    <p class="text-secondary small mb-4">Update the status of this damage report and record resolution remarks.</p>
+                    
+                    <form method="post" action="{% url 'bookings:admin_report_action' report.pk %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ action_form.status.id_for_label }}" class="form-label fw-semibold small text-secondary">Set Status</label>
+                            {{ action_form.status }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ action_form.admin_remarks.id_for_label }}" class="form-label fw-semibold small text-secondary">Admin Remarks / Resolution Details</label>
+                            {{ action_form.admin_remarks }}
+                            <div class="form-text small" style="font-size: 0.72rem;">Explain resolutions or repairs here. Visible to the student.</div>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <button type="submit" class="btn btn-primary-custom w-100 py-2.5">
+                            <i class="fa-solid fa-floppy-disk me-1"></i> Update Report Status
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Dashboard - Lab Inventory System{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <!-- Dashboard Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="fa-solid fa-home text-primary me-2"></i> Student Dashboard</h3>
+            <p class="text-secondary small mb-0">Welcome back, {{ user.full_name }}! Review your rentals, filed damage reports, and notifications.</p>
+        </div>
+        <div>
+            <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fa-solid fa-user me-1"></i> Student Account</span>
+        </div>
+    </div>
+    
+    <!-- Statistic Cards Grid (5 Cards) -->
+    <div class="row g-3 mb-5">
+        <!-- 1. My Active Bookings -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom card-hover h-100 p-4 border-start border-4 border-success shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase" style="font-size: 0.72rem;">Active Bookings</span>
+                        <h2 class="fw-bold mb-0 mt-1 text-success">{{ stats.active_bookings }}</h2>
+                    </div>
+                    <div class="p-2.5 bg-light rounded text-success">
+                        <i class="fa-solid fa-square-check fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 2. Pending Requests -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom card-hover h-100 p-4 border-start border-4 border-warning shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase" style="font-size: 0.72rem;">Pending Requests</span>
+                        <h2 class="fw-bold mb-0 mt-1 text-warning">{{ stats.pending_requests }}</h2>
+                    </div>
+                    <div class="p-2.5 bg-light rounded text-warning">
+                        <i class="fa-solid fa-clock fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 3. Returned Equipment -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom card-hover h-100 p-4 border-start border-4 border-primary shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase" style="font-size: 0.72rem;">Returned Items</span>
+                        <h2 class="fw-bold mb-0 mt-1 text-primary">{{ stats.returned_equipment }}</h2>
+                    </div>
+                    <div class="p-2.5 bg-light rounded text-primary">
+                        <i class="fa-solid fa-box fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 4. Unread Notifications -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom card-hover h-100 p-4 border-start border-4 border-danger shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase" style="font-size: 0.72rem;">Unread Alerts</span>
+                        <h2 class="fw-bold mb-0 mt-1 text-danger">{{ stats.unread_notifications }}</h2>
+                    </div>
+                    <div class="p-2.5 bg-light rounded text-danger">
+                        <i class="fa-solid fa-bell fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. My Reports -->
+        <div class="col-md-2.4 col-sm-6">
+            <div class="card card-custom card-hover h-100 p-4 border-start border-4 border-info shadow-sm" style="border-left-color: #fd7e14 !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-secondary small fw-semibold uppercase" style="font-size: 0.72rem;">My Damage Reports</span>
+                        <h2 class="fw-bold mb-0 mt-1" style="color: #fd7e14;">{{ stats.my_reports }}</h2>
+                    </div>
+                    <div class="p-2.5 bg-light rounded" style="color: #fd7e14;">
+                        <i class="fa-solid fa-screwdriver-wrench fa-lg"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Styles support for 5 columns -->
+    <style>
+        @media (min-width: 768px) {
+            .col-md-2\.4 {
+                flex: 0 0 20%;
+                max-width: 20%;
+            }
+        }
+    </style>
+    
+    <!-- Action Blocks Grid -->
+    <div class="row">
+        <!-- Quick Action Panels -->
+        <div class="col-lg-8">
+            <div class="card card-custom p-4 border-0 shadow-sm bg-light mb-4">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-circle-question text-primary me-2"></i> What would you like to do?</h5>
+                <p class="text-secondary small mb-4">Browse physical resources, file damage sheets for returned items, or track your booking records.</p>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <a href="{% url 'inventory:equipment_list' %}" class="btn btn-primary-custom w-100 py-2.5">
+                            <i class="fa-solid fa-flask-vial me-2"></i> Browse Equipment Catalog
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="{% url 'bookings:booking_list' %}" class="btn btn-outline-custom w-100 py-2.5">
+                            <i class="fa-solid fa-list-ul me-2"></i> View Booking History
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="{% url 'bookings:report_create' %}" class="btn btn-warning text-dark fw-bold w-100 py-2.5" style="border-radius: 8px;">
+                            <i class="fa-solid fa-plus me-1"></i> File Damage Report
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="{% url 'bookings:report_list' %}" class="btn btn-outline-custom w-100 py-2.5">
+                            <i class="fa-solid fa-screwdriver-wrench me-1"></i> View My Damage Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Live Notifications Info Card -->
+        <div class="col-lg-4">
+            <div class="card card-custom p-4 border-0 shadow-sm h-100">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-info-circle text-primary me-2"></i> Notifications</h5>
+                <p class="small text-secondary mb-3">You have {{ stats.unread_notifications }} unread notifications. Check the bell icon at the top of the page to read them or mark them as read.</p>
+                <a href="{% url 'dashboard:notification_list' %}" class="btn btn-outline-custom w-100 py-2">
+                    Open Notifications Manager
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
