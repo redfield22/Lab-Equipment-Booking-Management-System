@@ -15,7 +15,7 @@ Designed to demonstrate how a lab can manage equipment inventory, receive bookin
 - **Data Format:** JavaScript objects and JSON serialization
 - **Development Tools:** Visual Studio Code, Git, GitHub
 
-No frontend framework, backend framework, or database server is used. The prototype stores its demonstration data in the browser's LocalStorage.
+No frontend framework , backend framework, or database server is used. The prototype stores its demonstration data in the browser's LocalStorage.
 
 ---
 
