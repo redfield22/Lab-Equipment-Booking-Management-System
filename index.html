@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab Equipment Manager</title>
+<style>
+  :root{--bg:#f4f6fa;--card:#fff;--ink:#172033;--muted:#687386;--line:#e5e9f0;--accent:#3157d5;--green:#16845b;--amber:#a96808;--red:#bd3948;--shadow:0 8px 28px rgba(25,40,75,.07)}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+  header{background:#17264b;color:#fff;padding:22px max(20px,calc((100% - 1120px)/2));display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+  header h1{font-size:21px;margin:0} header p{margin:3px 0 0;color:#c9d3ee;font-size:13px}
+  main{max-width:1120px;margin:24px auto;padding:0 18px 50px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  button,.btn{border:0;border-radius:9px;padding:9px 13px;font:inherit;font-weight:650;cursor:pointer;background:#edf1fb;color:#263b77}button.primary{background:var(--accent);color:#fff}button.dark{background:#24365f;color:white}button.danger{background:#fff0f1;color:var(--red)}button.good{background:#e9f7f0;color:var(--green)}button:disabled{opacity:.45;cursor:not-allowed}
+  .tab.active{background:#24365f;color:#fff}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:20px}.stat,.panel,.item{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}.stat{padding:15px}.stat span{color:var(--muted);font-size:13px}.stat strong{display:block;font-size:27px;margin-top:4px}
+  .layout{display:grid;grid-template-columns:1.35fr .85fr;gap:16px}.panel{padding:18px;margin-bottom:16px}.panel h2{font-size:17px;margin:0 0 13px}.muted{color:var(--muted)}.small{font-size:12px;color:var(--muted)}
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{display:block;font-size:13px;font-weight:650;color:#4c5669;margin-bottom:5px}input,select,textarea{width:100%;border:1px solid #d9dfeb;border-radius:8px;padding:10px;background:#fff;color:var(--ink);font:inherit}input:focus,select:focus{outline:2px solid #cbd6ff;border-color:var(--accent)}.field{margin-bottom:11px}.full{grid-column:1/-1}
+  .list{display:grid;gap:10px}.item{padding:13px;box-shadow:none}.itemtop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.item h3{margin:0;font-size:15px}.meta{font-size:13px;color:var(--muted);margin-top:4px}.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}.actions button{font-size:12px;padding:7px 9px}
+  .pill{display:inline-block;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:750;background:#edf0f5;color:#586174;white-space:nowrap}.available,.approved,.returned{background:#e8f6ef;color:var(--green)}.pending,.maintenance{background:#fff4df;color:var(--amber)}.rejected,.overdue{background:#ffedef;color:var(--red)}.issued{background:#eaf0ff;color:#3157b7}
+  .hidden{display:none!important}.notice{padding:11px 13px;border-radius:10px;background:#eef3ff;color:#344a86;font-size:13px;margin-bottom:15px}.empty{padding:22px;text-align:center;color:var(--muted);border:1px dashed #d6dce7;border-radius:12px}.searchrow{display:flex;gap:9px;margin-bottom:12px}.searchrow input{flex:1}.sectionhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+  footer{text-align:center;color:var(--muted);font-size:12px;padding:18px}
+  @media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}}@media(max-width:500px){.fields{grid-template-columns:1fr}.full{grid-column:auto}.grid{gap:8px}.stat{padding:12px}.stat strong{font-size:23px}}
+</style>
+</head>
+<body>
+<header><div><h1>🧪 Lab Equipment Manager</h1><p>Booking · Inventory · Issue & Return · Maintenance</p></div><div><span class="small" style="color:#c9d3ee">Demo mode · data saved in this browser</span></div></header>
+<main>
+  <div class="notice"><strong>Prototype note:</strong> This is a single-browser demonstration. The role switch is for showcasing workflows, not real authentication. Do not enter real student or institutional data.</div>
+  <div class="toolbar">
+    <button class="tab active" data-tab="dashboard">Dashboard</button><button class="tab" data-tab="inventory">Inventory</button><button class="tab" data-tab="bookings">Bookings</button><button class="tab" data-tab="operations">Issue / Return & Maintenance</button>
+    <span style="flex:1"></span><select id="role" style="width:auto;min-width:150px"><option value="student">Demo as Student</option><option value="staff">Demo as Lab Staff</option></select>
+  </div>
+  <section id="dashboard" class="view">
+    <div class="grid" id="stats"></div>
+    <div class="layout"><div class="panel"><h2>Recent booking activity</h2><div id="recent" class="list"></div></div><div class="panel"><h2>Quick actions</h2><p class="muted">Use the tabs to explore the equipment lifecycle.</p><div class="list"><button class="primary" onclick="go('inventory')">Browse equipment</button><button onclick="go('bookings')">View booking requests</button><button onclick="go('operations')">Manage returns & maintenance</button></div></div></div>
+  </section>
+  <section id="inventory" class="view hidden">
+    <div class="layout"><div class="panel"><div class="sectionhead"><h2>Equipment inventory</h2><span class="small" id="inventoryCount"></span></div><div class="searchrow"><input id="search" placeholder="Search equipment or category…" /></div><div id="equipmentList" class="list"></div></div>
+      <div class="panel" id="addEquipmentPanel"><h2>Add equipment (Lab Staff)</h2><form id="equipmentForm"><div class="field"><label>Equipment name</label><input name="name" required placeholder="e.g. Digital Multimeter" /></div><div class="fields"><div class="field"><label>Category</label><input name="category" required placeholder="Electronics" /></div><div class="field"><label>Total quantity</label><input name="quantity" type="number" min="1" value="1" required /></div></div><div class="field"><label>Location</label><input name="location" placeholder="Lab 2 / Shelf A" /></div><button class="primary" type="submit">Add to inventory</button></form></div>
+    </div>
+  </section>
+  <section id="bookings" class="view hidden">
+    <div class="layout"><div class="panel"><h2>Booking requests</h2><div id="bookingList" class="list"></div></div><div class="panel"><h2>Request equipment (Student)</h2><form id="bookingForm"><div class="field"><label>Equipment</label><select name="equipmentId" id="equipmentSelect" required></select></div><div class="field"><label>Your name / student ID</label><input name="requester" required placeholder="e.g. Asha / 23CS101" /></div><div class="fields"><div class="field"><label>Booking date</label><input name="date" type="date" required /></div><div class="field"><label>Quantity</label><input name="quantity" type="number" min="1" value="1" required /></div></div><div class="field"><label>Purpose</label><input name="purpose" required placeholder="e.g. Networks lab experiment" /></div><button class="primary" type="submit">Submit booking request</button></form><p class="small">Requests start as Pending. Lab Staff can approve or reject them.</p></div></div>
+  </section>
+  <section id="operations" class="view hidden">
+    <div class="layout"><div class="panel"><h2>Approved bookings & equipment issue/return</h2><div id="operationsList" class="list"></div></div><div class="panel"><h2>Maintenance management (Lab Staff)</h2><form id="maintenanceForm"><div class="field"><label>Equipment</label><select name="equipmentId" id="maintenanceSelect" required></select></div><div class="field"><label>Issue / maintenance note</label><input name="note" required placeholder="e.g. Calibration required" /></div><button class="primary" type="submit">Mark under maintenance</button></form><p class="small">Equipment under maintenance cannot be booked. Staff can mark it available again after repair.</p><h2 style="margin-top:22px">Maintenance records</h2><div id="maintenanceList" class="list"></div></div></div>
+  </section>
+  <footer>Lab Equipment Booking & Management System · Academic prototype</footer>
+</main>
+<script>
+const KEY='lebms-prototype-v1';
+const seed={equipment:[
+ {id:'E001',name:'Digital Multimeter',category:'Electronics',quantity:5,location:'Electronics Lab',status:'available'},
+ {id:'E002',name:'Oscilloscope',category:'Electronics',quantity:2,location:'Electronics Lab',status:'available'},
+ {id:'E003',name:'Microscope',category:'Biology',quantity:4,location:'Biology Lab',status:'available'},
+ {id:'E004',name:'Centrifuge',category:'Biology',quantity:1,location:'Biology Lab',status:'maintenance'}
+],bookings:[
+ {id:'B1001',equipmentId:'E001',requester:'Demo Student / 23CS101',date:new Date(Date.now()+86400000).toISOString().slice(0,10),quantity:1,purpose:'Circuit testing practical',status:'pending',created:Date.now()},
+ {id:'B1002',equipmentId:'E002',requester:'Demo Faculty',date:new Date(Date.now()+172800000).toISOString().slice(0,10),quantity:1,purpose:'Signals and systems lab',status:'approved',created:Date.now()}
+],maintenance:[{id:'M001',equipmentId:'E004',note:'Routine servicing required',status:'open',created:Date.now()}]};
+let db;try{db=JSON.parse(localStorage.getItem(KEY))||structuredClone(seed)}catch(e){db=JSON.parse(JSON.stringify(seed))}
+const $=s=>document.querySelector(s);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
+function eq(id){return db.equipment.find(x=>x.id===id)}
+function badge(status){return `<span class="pill ${esc(status)}">${esc(status[0].toUpperCase()+status.slice(1))}</span>`}
+function go(tab){document.querySelectorAll('.view').forEach(x=>x.classList.add('hidden'));$('#'+tab).classList.remove('hidden');document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));render()}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>go(b.dataset.tab)));
+function staffOnly(){if($('#role').value!=='staff'){alert('Switch to “Demo as Lab Staff” to use this action.');return false}return true}
+$('#role').addEventListener('change',render);$('#search').addEventListener('input',renderEquipment);
+function render(){const available=db.equipment.filter(e=>e.status==='available').reduce((n,e)=>n+e.quantity,0);$('#stats').innerHTML=[['Equipment types',db.equipment.length],['Available units',available],['Pending requests',db.bookings.filter(b=>b.status==='pending').length],['Under maintenance',db.equipment.filter(e=>e.status==='maintenance').length]].map(([a,b])=>`<div class="stat"><span>${a}</span><strong>${b}</strong></div>`).join('');
+ $('#recent').innerHTML=db.bookings.slice().sort((a,b)=>b.created-a.created).slice(0,4).map(bookingCard).join('')||'<div class="empty">No booking activity yet.</div>';
+ $('#inventoryCount').textContent=db.equipment.length+' equipment types';renderEquipment();renderBookings();renderOperations();renderSelects();
+ const isStaff=$('#role').value==='staff';$('#addEquipmentPanel').classList.toggle('hidden',!isStaff);$('#maintenanceForm').classList.toggle('hidden',!isStaff);
+}
+function renderEquipment(){if(!$('#equipmentList'))return;const q=($('#search')?.value||'').toLowerCase();const items=db.equipment.filter(e=>(e.name+' '+e.category+' '+e.location).toLowerCase().includes(q));$('#equipmentList').innerHTML=items.map(e=>`<div class="item"><div class="itemtop"><div><h3>${esc(e.name)}</h3><div class="meta">${esc(e.id)} · ${esc(e.category)} · ${esc(e.location||'Location not set')}</div><div class="meta">Quantity: ${e.quantity}</div></div>${badge(e.status)}</div><div class="actions">${e.status==='maintenance'&&$('#role').value==='staff'?`<button class="good" onclick="restoreEquipment('${e.id}')">Mark available</button>`:''}<button onclick="quickBook('${e.id}')" ${e.status!=='available'?'disabled':''}>Request booking</button></div></div>`).join('')||'<div class="empty">No matching equipment.</div>'}
+function bookingCard(b){const e=eq(b.equipmentId);return `<div class="item"><div class="itemtop"><div><h3>${esc(e?.name||'Deleted equipment')} · ${esc(b.id)}</h3><div class="meta">${esc(b.requester)} · ${esc(b.date)} · Qty ${b.quantity}</div><div class="meta">Purpose: ${esc(b.purpose)}</div></div>${badge(b.status)}</div>${$('#role').value==='staff'&&b.status==='pending'?`<div class="actions"><button class="good" onclick="decide('${b.id}','approved')">Approve</button><button class="danger" onclick="decide('${b.id}','rejected')">Reject</button></div>`:''}</div>`}
+function renderBookings(){$('#bookingList').innerHTML=db.bookings.slice().sort((a,b)=>b.created-a.created).map(bookingCard).join('')||'<div class="empty">No bookings yet.</div>'}
+function renderOperations(){const rows=db.bookings.filter(b=>['approved','issued','returned'].includes(b.status));$('#operationsList').innerHTML=rows.map(b=>`<div class="item"><div class="itemtop"><div><h3>${esc(eq(b.equipmentId)?.name||'Equipment')} · ${esc(b.id)}</h3><div class="meta">${esc(b.requester)} · ${esc(b.date)} · Qty ${b.quantity}</div></div>${badge(b.status)}</div><div class="actions">${b.status==='approved'?`<button class="primary" onclick="issue('${b.id}')">Record issue</button>`:''}${b.status==='issued'?`<button class="good" onclick="returnItem('${b.id}')">Record return</button>`:''}</div></div>`).join('')||'<div class="empty">No approved or issued bookings yet.</div>';
+ $('#maintenanceList').innerHTML=db.maintenance.map(m=>`<div class="item"><div class="itemtop"><div><h3>${esc(eq(m.equipmentId)?.name||m.equipmentId)}</h3><div class="meta">${esc(m.note)}</div></div>${badge(m.status==='open'?'maintenance':'returned')}</div>${m.status==='open'&&$('#role').value==='staff'?`<div class="actions"><button class="good" onclick="closeMaintenance('${m.id}')">Complete repair</button></div>`:''}</div>`).join('')||'<div class="empty">No maintenance records.</div>'}
+function renderSelects(){const opts=db.equipment.map(e=>`<option value="${e.id}">${esc(e.name)} (${e.status}, qty ${e.quantity})</option>`).join('');$('#equipmentSelect').innerHTML=opts||'<option value="">No equipment</option>';$('#maintenanceSelect').innerHTML=opts||'<option value="">No equipment</option>'}
+function quickBook(id){go('bookings');$('#equipmentSelect').value=id;$('#bookingForm').requester?.focus()}
+$('#equipmentForm').addEventListener('submit',ev=>{ev.preventDefault();if(!staffOnly())return;const f=new FormData(ev.target);db.equipment.push({id:'E'+String(Date.now()).slice(-6),name:f.get('name').trim(),category:f.get('category').trim(),quantity:Number(f.get('quantity')),location:f.get('location').trim(),status:'available'});ev.target.reset();save()});
+$('#bookingForm').addEventListener('submit',ev=>{ev.preventDefault();const f=new FormData(ev.target),e=eq(f.get('equipmentId')),qty=Number(f.get('quantity'));if(!e||e.status!=='available'){alert('This equipment is not currently available.');return}if(qty<1||qty>e.quantity){alert('Requested quantity exceeds the listed inventory quantity.');return}db.bookings.push({id:'B'+String(Date.now()).slice(-6),equipmentId:e.id,requester:f.get('requester').trim(),date:f.get('date'),quantity:qty,purpose:f.get('purpose').trim(),status:'pending',created:Date.now()});ev.target.reset();save();alert('Booking request submitted. It is now pending staff approval.')});
+$('#maintenanceForm').addEventListener('submit',ev=>{ev.preventDefault();if(!staffOnly())return;const f=new FormData(ev.target),e=eq(f.get('equipmentId'));if(!e)return;e.status='maintenance';db.maintenance.push({id:'M'+String(Date.now()).slice(-6),equipmentId:e.id,note:f.get('note').trim(),status:'open',created:Date.now()});ev.target.reset();save()});
+function decide(id,status){if(!staffOnly())return;const b=db.bookings.find(x=>x.id===id);if(!b)return;const e=eq(b.equipmentId);if(status==='approved'&&(!e||e.status!=='available'||b.quantity>e.quantity)){alert('Cannot approve: equipment is unavailable or quantity is insufficient.');return}b.status=status;save()}
+function issue(id){if(!staffOnly())return;const b=db.bookings.find(x=>x.id===id);if(!b||b.status!=='approved')return;const e=eq(b.equipmentId);if(!e||e.quantity<b.quantity){alert('Insufficient equipment quantity.');return}e.quantity-=b.quantity;b.status='issued';save()}
+function returnItem(id){if(!staffOnly())return;const b=db.bookings.find(x=>x.id===id);if(!b||b.status!=='issued')return;const damaged=confirm('Did the returned equipment require maintenance?\nOK = Yes, flag for maintenance\nCancel = No, return to available stock');const e=eq(b.equipmentId);if(!e)return;if(damaged){e.status='maintenance';db.maintenance.push({id:'M'+String(Date.now()).slice(-6),equipmentId:e.id,note:'Flagged during equipment return inspection',status:'open',created:Date.now()})}else{e.quantity+=b.quantity;e.status='available'}b.status='returned';save()}
+function restoreEquipment(id){if(!staffOnly())return;const e=eq(id);if(e)e.status='available';db.maintenance.filter(m=>m.equipmentId===id&&m.status==='open').forEach(m=>m.status='closed');save()}
+function closeMaintenance(id){if(!staffOnly())return;const m=db.maintenance.find(x=>x.id===id);if(!m)return;m.status='closed';const e=eq(m.equipmentId);if(e)e.status='available';save()}
+window.go=go;window.decide=decide;window.issue=issue;window.returnItem=returnItem;window.restoreEquipment=restoreEquipment;window.closeMaintenance=closeMaintenance;window.quickBook=quickBook;
+render();
+</script>
+</body>
+</html>
