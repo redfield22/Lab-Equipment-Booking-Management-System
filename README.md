@@ -1,6 +1,6 @@
 # Lab Equipment Booking & Management System
 
-A browser-based laboratory equipment management prototype built using HTML5, CSS3, and Vanilla JavaScript.
+A browser-based laboratory equipment management system prototype built using HTML5, CSS3, and Vanilla JavaScript.
 
 Designed to demonstrate how a lab can manage equipment inventory, receive booking requests, approve reservations, record equipment issue and return, and track maintenance activity through a simple interface.
 
